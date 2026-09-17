@@ -1,0 +1,20 @@
+{
+  "name": "snaptalk",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build":"npm i --prefix backend && npm i --prefix frontend && npm run build --prefix frontend",
+    "start":"npm run start --prefix backend "
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cagnijita/SnapTalk.git"
+  },
+  "keywords": [],
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/cagnijita/SnapTalk/issues"
+  },
+  "homepage": "https://github.com/cagnijita/SnapTalk#readme"
+}
