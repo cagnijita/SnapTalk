@@ -4,10 +4,10 @@ import authRoutes from './routes/auth.route.js';
 import messageRoutes from './routes/message.route.js';
 import path from 'path';
 import {connectDB} from "./lib/db.js"
-dotenv.config();
+import {env} from "./lib/env.js";
 const app = express();
 
-const PORT = process.env.PORT || 3000;
+const PORT = env.PORT || 3000;
 const __dirname = path.resolve();
 
 app.use(express.json());
@@ -18,7 +18,7 @@ app.use("/api/messages", messageRoutes);
 //     res.send("Welcome to SnapTalk API");
 // });
 
-if (process.env.NODE_ENV === "production") {
+if (env.NODE_ENV === "production") {
     app.use(express.static(path.join(__dirname, "../frontend/dist")));
     app.get("*any", (req, res) => {
         res.sendFile(path.join(__dirname, "../frontend/dist/index.html"))});
