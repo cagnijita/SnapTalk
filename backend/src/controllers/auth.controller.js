@@ -1,5 +1,5 @@
 import User from "../models/User.js";
-import brcypt from "bcryptjs";
+import bcrypt from "bcryptjs";
 import { generateToken } from "../lib/utils.js";
 import { sendWelcomeEmail } from "../emails/emailHandlers.js";
 import { env } from "../lib/env.js";
@@ -32,7 +32,7 @@ export const signup = async (req, res) => {
             return res.status(400).json({ message: "User already exists" });
         }
         const salt = await brcypt.genSalt(10);
-        const hashedPassword = await brcypt.hash(password, salt);
+        const hashedPassword = await bcrypt.hash(password, salt);
         const newUser = new User({
             username,
             email,
@@ -70,3 +70,40 @@ export const signup = async (req, res) => {
         res.status(500).json({ message: "Internal server error" });
     }
 };
+
+export const login = async (req, res) => {
+    const { email, password } = req.body;
+if(!email || !password) {
+    return res.status(400).json({ message: "Email and password are required" });
+}
+    try {
+        const user = await User.findOne({ email });
+        if (!user) { return res.status(400).json({ message: "Invalid credentials" }); }
+
+        const isMatchedPassword = await bcrypt.compare(password, user.password);
+
+        if (!isMatchedPassword) {
+            return res.status(400).json({ message: "Invalid credentials" });
+        }
+
+        generateToken(user._id, res);
+        res.status(200).json({
+            message: "Login successful",
+            user: {
+                id: user._id,
+                username: user.username,
+                email: user.email,
+                profilepic: user.profilepic,
+            }
+        }
+        );
+    }
+    catch (error) {
+        console.error("Error while logging in", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+}
+export const logout = (_, res) => {
+    res.cookie(("jwt"), "", { maxAge: 0 })
+    res.status(200).json({ message: "Logged out successfully" });
+}
