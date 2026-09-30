@@ -121,15 +121,15 @@ export const updateProfile = async (req, res) => {
 
         const updatedUser = await User.findByIdAndUpdate(
             req.user._id,
-            {profilepic: profilepicUrl},
-            { new: true });  // Return the updated user object
-if (!updatedUser) {
+            { profilepic: profilepicUrl },
+            { new: true }).select("-password");  // Return the updated user object and exclude the password field
+        if (!updatedUser) {
             return res.status(404).json({ message: "User not found" });
         }
 
         res.status(200).json(updatedUser);
     }
-    catch (error) { 
+    catch (error) {
         console.error("Error while updating profile", error);
         res.status(500).json({ message: "Internal server error" });
     }
