@@ -60,6 +60,10 @@ export const sendMessage = async (req, res) => {
         if (!text && !image) {
             return res.status(400).json({ message: "Message content is required" });
         }
+        const recieverExists = await User.exists({ _id: receiverId });
+        if (!recieverExists) {
+            return res.status(404).json({ message: "Receiver does not exist" });
+        }
 
         let imageUrl;
         if (image) {
