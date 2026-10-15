@@ -14,11 +14,6 @@ const SignUpPage = () => {
     signUp(formData);
   }
   return (
-    // <div className="flex items-center justify-center p-4 w-full bg-slate-800">
-    //   <div className="w-full max-w-6xl relative md:h-[800px] h-[650px]">
-
-    //   </div>
-    // </div>
     <div className="flex items-center justify-center p-4 w-full bg-transparent">
       <BorderAnimatedContainer>
         <div className="flex w-full flex-col md:flex-row p-6">
