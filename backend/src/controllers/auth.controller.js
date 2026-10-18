@@ -127,7 +127,7 @@ export const updateProfile = async (req, res) => {
             return res.status(404).json({ message: "User not found" });
         }
 
-        res.status(200).json(updatedUser);
+        res.status(200).json({updatedUser});
     }
     catch (error) {
         console.error("Error while updating profile", error);
