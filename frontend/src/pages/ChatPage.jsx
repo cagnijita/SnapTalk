@@ -10,7 +10,7 @@ import BorderAnimatedContainer from '../components/BorderAnimatedContainer.jsx';
 
 const ChatPage = () => {
   const { activeTab,selectedUser } = useChatStore();
-
+// console.log(selectedUser)
   return (
       <div className="flex items-center justify-center w-full bg-transparent min-h-screen p-4">
       <BorderAnimatedContainer>
