@@ -10,13 +10,13 @@ import BorderAnimatedContainer from '../components/BorderAnimatedContainer.jsx';
 
 const ChatPage = () => {
   const { activeTab,selectedUser } = useChatStore();
-// console.log(selectedUser)
+console.log(selectedUser);
   return (
       <div className="flex items-center justify-center w-full bg-transparent min-h-screen p-4">
       <BorderAnimatedContainer>
          <div className="flex flex-row w-full h-full min-h-0 overflow-hidden">
         {/* Left side */}
-        <div className="w-80 bg-slate-800/50 backdrop-blur-sm flex flex-col">
+        <div className={`w-80 shrink-0 bg-slate-800/50 backdrop-blur-sm flex flex-col ${selectedUser?"hidden md:flex" :"flex"}`}>
           <ProfileHeader />
           <ActiveTabSwitch />
           <div className="flex-1 overflow-y-auto p-4 space-y-2">
@@ -25,7 +25,8 @@ const ChatPage = () => {
         </div>
 
         {/* Right Side */}
-        <div className='flex-1 flex flex-col bg-slate-900/50 backdrop-blur-sm'>
+        {/* <div className='flex-1 flex flex-col bg-slate-900/50 backdrop-blur-sm'> */}
+        <div className={`flex-1 min-w-0 min-h-0 overflow-hidden flex flex-col bg-slate-900/50 backdrop-blur-sm `}>
         {selectedUser ? <ChatContainer /> : <NoConversationPlaceholder />}
         </div>
         </div>
