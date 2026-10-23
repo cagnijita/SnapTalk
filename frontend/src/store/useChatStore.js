@@ -1,6 +1,7 @@
 import toast from "react-hot-toast";
 import { create } from "zustand";
 import { axiosInstance } from "../lib/axios.js";
+import { useAuthStore } from "./useAuthStore.js";
 
 export const useChatStore = create((set, get) => ({
     allContacts: [],
@@ -60,6 +61,34 @@ export const useChatStore = create((set, get) => ({
         }
         finally {
             set({ isMessagesLoading: false });
+        }
+    },
+
+    sendMessage: async (msgData) => {
+        const { selectedUser, messages } = get();
+        const { authUser } = useAuthStore.getState();
+        const tempId = `temp-${Date.now()}`;
+
+        //using only fi ui
+        const optimisticMessage = {
+            _id: tempId,
+            senderId: authUser._id,
+            receiverId: selectedUser._id,
+            text: msgData.text,
+            image: msgData.image,
+            createdAt: new Date().toISOString(),
+            isOptimistic: true
+        };
+        set({ messages: [...messages, optimisticMessage] });
+
+        try {
+            const res = await axiosInstance.post(`/messages/send/${selectedUser._id}`, msgData);
+            set({ messages: get().messages.map(msg => msg._id === tempId ? res.data : msg) });
+        }
+        catch (error) {
+            console.error(error);
+            toast.error(error.response?.data?.message || "Something went  wrong");
+            set({ messages: get().messages.filter(msg => msg._id !== tempId) })
         }
     }
 }));    

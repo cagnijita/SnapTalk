@@ -14,9 +14,10 @@ const SignUpPage = () => {
     signUp(formData);
   }
   return (
-    <div className="flex items-center justify-center p-4 w-full bg-transparent">
+    <div className="flex items-center justify-center p-4 w-full h-full bg-transparent">
       <BorderAnimatedContainer>
-        <div className="flex w-full flex-col md:flex-row p-6">
+        {/* <div className="flex w-full flex-col md:flex-row p-6"> */}
+        <div className="flex w-full min-h-full flex-col md:flex-row p-6 justify-center items-center">
           <div className='w-full flex flex-col md:flex-row'>
 
             {/* FORM CLOUMN - LEFT SIDE */}
