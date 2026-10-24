@@ -1,4 +1,4 @@
-import React from 'react'
+
 import { useChatStore } from "../store/useChatStore.js";
 import ProfileHeader from '../components/ProfileHeader.jsx';
 import ActiveTabSwitch from '../components/ActiveTabSwitch.jsx';
@@ -7,10 +7,26 @@ import ContactList from '../components/ContactList.jsx';
 import ChatContainer from '../components/ChatContainer.jsx';
 import NoConversationPlaceholder from '../components/NoConversationPlaceholder.jsx';
 import BorderAnimatedContainer from '../components/BorderAnimatedContainer.jsx';
+import { useEffect } from 'react';
+import { useAuthStore } from '../store/useAuthStore.js';
 
 const ChatPage = () => {
   const { activeTab,selectedUser } = useChatStore();
-console.log(selectedUser);
+const { authUser, socket, connectSocket } = useAuthStore();
+const { subscribeToMessages, unsubscribeFromMessages } = useChatStore();
+
+useEffect(() => {
+  if (authUser) connectSocket();
+}, [authUser, connectSocket]);
+
+useEffect(() => {
+  if (!socket?.connected) return;
+
+  subscribeToMessages();
+
+  return () => unsubscribeFromMessages();
+}, [socket, subscribeToMessages, unsubscribeFromMessages]);
+
   return (
       <div className="flex items-center justify-center w-full bg-transparent min-h-screen p-4">
       <BorderAnimatedContainer>
@@ -25,7 +41,6 @@ console.log(selectedUser);
         </div>
 
         {/* Right Side */}
-        {/* <div className='flex-1 flex flex-col bg-slate-900/50 backdrop-blur-sm'> */}
         <div className={`flex-1 min-w-0 min-h-0 overflow-hidden flex flex-col bg-slate-900/50 backdrop-blur-sm `}>
         {selectedUser ? <ChatContainer /> : <NoConversationPlaceholder />}
         </div>

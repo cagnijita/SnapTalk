@@ -3,10 +3,13 @@ import { create } from "zustand";
 import { axiosInstance } from "../lib/axios.js";
 import { useAuthStore } from "./useAuthStore.js";
 
+
+
 export const useChatStore = create((set, get) => ({
     allContacts: [],
     chats: [],
     messages: [],
+    unreadMessages: {},
     activeTab: "chats",
     selectedUser: null,
     isUsersLoading: false,
@@ -23,7 +26,15 @@ export const useChatStore = create((set, get) => ({
     },
 
     setSelectedUser: (selectedUser) => {
-        set({ selectedUser })
+        set((state) => {
+            const unreadMessages = { ...state.unreadMessages };
+
+            if (selectedUser?._id) {
+                delete unreadMessages[String(selectedUser._id)];
+            }
+
+            return { selectedUser, unreadMessages };
+        });
     },
 
     getAllContacts: async () => {
@@ -69,7 +80,7 @@ export const useChatStore = create((set, get) => ({
         const { authUser } = useAuthStore.getState();
         const tempId = `temp-${Date.now()}`;
 
-        //using only fi ui
+        //using only for ui
         const optimisticMessage = {
             _id: tempId,
             senderId: authUser._id,
@@ -90,5 +101,48 @@ export const useChatStore = create((set, get) => ({
             toast.error(error.response?.data?.message || "Something went  wrong");
             set({ messages: get().messages.filter(msg => msg._id !== tempId) })
         }
+    },
+
+    subscribeToMessages: () => {
+        const socket = useAuthStore.getState().socket;
+        if (!socket) return;
+
+        //to prevent duplicate handling
+        socket.off("newMessage");
+
+        socket.on("newMessage", (newMessage) => {
+            const senderId = String(newMessage.senderId?._id ?? newMessage.senderId);
+            const currentSelectedUserId = String(get().selectedUser?._id ?? "");
+
+            const isFromSelectedUser = senderId === currentSelectedUserId;
+            if (isFromSelectedUser) {
+                set((state) => ({
+                    messages: [...state.messages, newMessage],
+                }));
+            } else {
+                set((state) => ({
+                    unreadMessages: {
+                        ...state.unreadMessages,
+                        [senderId]:
+                            (state.unreadMessages[senderId] || 0) + 1,
+                    },
+                }));
+            }
+
+            if (get().isSoundEnabled) {
+                const notificationSound = new Audio(
+                    "/sounds/notification.mp3"
+                );
+                notificationSound.play().catch((error) =>
+                    console.log("Audio play failed", error)
+                );
+            }
+        });
+    },
+
+
+    unsubscribeFromMessages: () => {
+        const socket = useAuthStore.getState().socket;
+        socket.off("newMessage");
     }
 }));    
