@@ -5,26 +5,37 @@ import NoContactsFound from './NoContactsFound';
 import { useAuthStore } from '../store/useAuthStore';
 
 function ContactList() {
-  const { getAllContacts, allContacts, setSelectedUser, isUsersLoading } = useChatStore();
-  const {onlineUsers}=useAuthStore();
+  const { getAllContacts, allContacts, setSelectedUser, isUsersLoading, unreadMessages } = useChatStore();
+  const { onlineUsers } = useAuthStore();
 
   useEffect(() => {
     getAllContacts();
   }, [getAllContacts]);
 
   if (isUsersLoading) return <UsersLoadingSkeleton />
-if(allContacts.length===0) return <NoContactsFound />
+  if (allContacts.length === 0) return <NoContactsFound />
   return (
     <div>
       {allContacts.map((contact) => (
         <div key={contact._id} className='bg-cyan-500/10 p-4 rounded-lg cursor-pointer hover:bg-cyan-500/20 transition-colors' onClick={() => setSelectedUser(contact)}>
-       <div className="flex items-center gap-3">
-            <div className={`avatar ${onlineUsers.includes(contact._id)?"avatar-online":"avatar-offline"} `}>
+          <div className="flex items-center gap-3">
+            <div className={`avatar ${onlineUsers.includes(contact._id) ? "avatar-online" : "avatar-offline"} `}>
               <div className="size-12 rounded-full">
                 <img src={contact.profilepic || "/avatar.png"} alt={contact.username} />
               </div>
             </div>
-            <h4 className="text-slate-200 font-medium truncate">{contact.username}</h4>
+            {/* <h4 className="text-slate-200 font-medium truncate">{contact.username}</h4> */}
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <h4 className="text-slate-200 font-medium truncate">
+                {contact.username}
+              </h4>
+
+              {unreadMessages[contact._id] > 0 && (
+                <span className="shrink-0 rounded-full bg-cyan-500 text-white text-xs min-w-5 h-5 px-1 flex items-center justify-center">
+                  {unreadMessages[contact._id]}
+                </span>
+              )}
+            </div>
           </div>
         </div>
       ))}
