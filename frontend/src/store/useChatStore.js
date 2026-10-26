@@ -62,18 +62,26 @@ export const useChatStore = create((set, get) => ({
     },
 
     getMessagesByUserId: async (userId) => {
-        set({ isMessagesLoading: true });
-        try {
-            const res = await axiosInstance.get(`/messages/${userId}`);
-            set({ messages: res.data });
+    set({ isMessagesLoading: true });
+
+    try {
+        const res = await axiosInstance.get(`/messages/${userId}`);
+
+        if (String(get().selectedUser?._id) !== String(userId)) {
+            return;
         }
-        catch (error) {
-            toast.error(error.response?.data?.message || "Something went wrong");
-        }
-        finally {
+
+        set({ messages: res.data });
+    } catch (error) {
+        toast.error(
+            error.response?.data?.message || "Something went wrong"
+        );
+    } finally {
+        if (String(get().selectedUser?._id) === String(userId)) {
             set({ isMessagesLoading: false });
         }
-    },
+    }
+},
 
     sendMessage: async (msgData) => {
         const { selectedUser, messages } = get();
@@ -103,46 +111,77 @@ export const useChatStore = create((set, get) => ({
         }
     },
 
-    subscribeToMessages: () => {
-        const socket = useAuthStore.getState().socket;
-        if (!socket) return;
 
-        //to prevent duplicate handling
-        socket.off("newMessage");
+subscribeToMessages: () => {
+    const socket = useAuthStore.getState().socket;
+    if (!socket) return;
 
-        socket.on("newMessage", (newMessage) => {
-            const senderId = String(newMessage.senderId?._id ?? newMessage.senderId);
-            const currentSelectedUserId = String(get().selectedUser?._id ?? "");
+    // Prevent duplicate event listeners
+    socket.off("newMessage");
 
-            const isFromSelectedUser = senderId === currentSelectedUserId;
-            if (isFromSelectedUser) {
-                set((state) => ({
+    socket.on("newMessage", (newMessage) => {
+        const currentUser = useAuthStore.getState().authUser;
+        if (!currentUser) return;
+
+        const senderId = String(
+            newMessage.senderId?._id ?? newMessage.senderId
+        );
+
+        const receiverId = String(
+            newMessage.receiverId?._id ?? newMessage.receiverId
+        );
+
+        const currentUserId = String(currentUser._id);
+
+        // Ignore messages that aren't addressed to this user
+        if (receiverId !== currentUserId) return;
+
+        const { selectedUser, isSoundEnabled } = get();
+        const selectedUserId = String(selectedUser?._id ?? "");
+
+        const isSelectedChat = senderId === selectedUserId;
+
+        if (isSelectedChat) {
+            // Add the message only if it isn't already present
+            set((state) => {
+                const exists = state.messages.some(
+                    (message) =>
+                        String(message._id) === String(newMessage._id)
+                );
+
+                if (exists) return state;
+
+                return {
                     messages: [...state.messages, newMessage],
-                }));
-            } else {
-                set((state) => ({
-                    unreadMessages: {
-                        ...state.unreadMessages,
-                        [senderId]:
-                            (state.unreadMessages[senderId] || 0) + 1,
-                    },
-                }));
-            }
+                };
+            });
+        } else {
+            // Increment unread count for the sender
+            set((state) => ({
+                unreadMessages: {
+                    ...state.unreadMessages,
+                    [senderId]:
+                        (state.unreadMessages[senderId] || 0) + 1,
+                },
+            }));
 
-            if (get().isSoundEnabled) {
+            // Play sound only for an unselected conversation
+            if (isSoundEnabled) {
                 const notificationSound = new Audio(
                     "/sounds/notification.mp3"
                 );
-                notificationSound.play().catch((error) =>
-                    console.log("Audio play failed", error)
-                );
+
+                notificationSound.play().catch((error) => {
+                    console.log("Notification sound failed:", error);
+                });
             }
-        });
-    },
+        }
+    });
+},
 
 
     unsubscribeFromMessages: () => {
         const socket = useAuthStore.getState().socket;
-        socket.off("newMessage");
+        socket?.off("newMessage");
     }
 }));    
