@@ -16,16 +16,32 @@ const { authUser, socket, connectSocket } = useAuthStore();
 const { subscribeToMessages, unsubscribeFromMessages } = useChatStore();
 
 useEffect(() => {
-  if (authUser) connectSocket();
+    if (authUser) {
+        connectSocket();
+    }
 }, [authUser, connectSocket]);
 
 useEffect(() => {
-  if (!socket?.connected) return;
+    if (!socket) return;
 
-  subscribeToMessages();
+    const handleConnect = () => {
+        subscribeToMessages();
+    };
 
-  return () => unsubscribeFromMessages();
+    // Subscribe immediately if already connected
+    if (socket.connected) {
+        handleConnect();
+    }
+
+    // Also subscribe when a connection is established or restored
+    socket.on("connect", handleConnect);
+
+    return () => {
+        socket.off("connect", handleConnect);
+        unsubscribeFromMessages();
+    };
 }, [socket, subscribeToMessages, unsubscribeFromMessages]);
+
 
   return (
       <div className="flex items-center justify-center w-full bg-transparent min-h-screen p-4">

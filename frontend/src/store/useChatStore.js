@@ -62,26 +62,26 @@ export const useChatStore = create((set, get) => ({
     },
 
     getMessagesByUserId: async (userId) => {
-    set({ isMessagesLoading: true });
+        set({ isMessagesLoading: true });
 
-    try {
-        const res = await axiosInstance.get(`/messages/${userId}`);
+        try {
+            const res = await axiosInstance.get(`/messages/${userId}`);
 
-        if (String(get().selectedUser?._id) !== String(userId)) {
-            return;
+            if (String(get().selectedUser?._id) !== String(userId)) {
+                return;
+            }
+
+            set({ messages: res.data });
+        } catch (error) {
+            toast.error(
+                error.response?.data?.message || "Something went wrong"
+            );
+        } finally {
+            if (String(get().selectedUser?._id) === String(userId)) {
+                set({ isMessagesLoading: false });
+            }
         }
-
-        set({ messages: res.data });
-    } catch (error) {
-        toast.error(
-            error.response?.data?.message || "Something went wrong"
-        );
-    } finally {
-        if (String(get().selectedUser?._id) === String(userId)) {
-            set({ isMessagesLoading: false });
-        }
-    }
-},
+    },
 
     sendMessage: async (msgData) => {
         const { selectedUser, messages } = get();
@@ -112,72 +112,72 @@ export const useChatStore = create((set, get) => ({
     },
 
 
-subscribeToMessages: () => {
-    const socket = useAuthStore.getState().socket;
-    if (!socket) return;
+    subscribeToMessages: () => {
+        const socket = useAuthStore.getState().socket;
+        if (!socket) return;
 
-    // Prevent duplicate event listeners
-    socket.off("newMessage");
+        // Prevent duplicate event listeners
+        socket.off("newMessage");
 
-    socket.on("newMessage", (newMessage) => {
-        const currentUser = useAuthStore.getState().authUser;
-        if (!currentUser) return;
+        socket.on("newMessage", (newMessage) => {
+            const currentUser = useAuthStore.getState().authUser;
+            if (!currentUser) return;
 
-        const senderId = String(
-            newMessage.senderId?._id ?? newMessage.senderId
-        );
+            const senderId = String(
+                newMessage.senderId?._id ?? newMessage.senderId
+            );
 
-        const receiverId = String(
-            newMessage.receiverId?._id ?? newMessage.receiverId
-        );
+            const receiverId = String(
+                newMessage.receiverId?._id ?? newMessage.receiverId
+            );
 
-        const currentUserId = String(currentUser._id);
+            const currentUserId = String(currentUser._id);
 
-        // Ignore messages that aren't addressed to this user
-        if (receiverId !== currentUserId) return;
+            // Ignore messages that aren't addressed to this user
+            if (receiverId !== currentUserId) return;
 
-        const { selectedUser, isSoundEnabled } = get();
-        const selectedUserId = String(selectedUser?._id ?? "");
+            const { selectedUser, isSoundEnabled } = get();
+            const selectedUserId = String(selectedUser?._id ?? "");
 
-        const isSelectedChat = senderId === selectedUserId;
+            const isSelectedChat = senderId === selectedUserId;
 
-        if (isSelectedChat) {
-            // Add the message only if it isn't already present
-            set((state) => {
-                const exists = state.messages.some(
-                    (message) =>
-                        String(message._id) === String(newMessage._id)
-                );
+            if (isSelectedChat) {
+                // Add the message only if it isn't already present
+                set((state) => {
+                    const exists = state.messages.some(
+                        (message) =>
+                            String(message._id) === String(newMessage._id)
+                    );
 
-                if (exists) return state;
+                    if (exists) return state;
 
-                return {
-                    messages: [...state.messages, newMessage],
-                };
-            });
-        } else {
-            // Increment unread count for the sender
-            set((state) => ({
-                unreadMessages: {
-                    ...state.unreadMessages,
-                    [senderId]:
-                        (state.unreadMessages[senderId] || 0) + 1,
-                },
-            }));
-
-            // Play sound only for an unselected conversation
-            if (isSoundEnabled) {
-                const notificationSound = new Audio(
-                    "/sounds/notification.mp3"
-                );
-
-                notificationSound.play().catch((error) => {
-                    console.log("Notification sound failed:", error);
+                    return {
+                        messages: [...state.messages, newMessage],
+                    };
                 });
+            } else {
+                // Increment unread count for the sender
+                set((state) => ({
+                    unreadMessages: {
+                        ...state.unreadMessages,
+                        [senderId]:
+                            (state.unreadMessages[senderId] || 0) + 1,
+                    },
+                }));
+
+                // Play sound only for an unselected conversation
+                if (isSoundEnabled) {
+                    const notificationSound = new Audio(
+                        "/sounds/notification.mp3"
+                    );
+
+                    notificationSound.play().catch((error) => {
+                        console.log("Notification sound failed:", error);
+                    });
+                }
             }
-        }
-    });
-},
+        });
+    },
 
 
     unsubscribeFromMessages: () => {
