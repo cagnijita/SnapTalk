@@ -40,7 +40,7 @@ const LoginPage = () => {
                     <div className="relative">
                       <MailIcon className="auth-input-icon" />
 
-                      <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="input" placeholder="johndoe@gmail.com" />
+                      <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="input" placeholder="Enter your emaail" />
                     </div>
                   </div>
 
